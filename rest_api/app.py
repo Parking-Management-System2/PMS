@@ -1,8 +1,8 @@
 from flask import Flask
-from db.database import initialize_database
-from routes.cars_routes import cars_blueprint
-from routes.parking_routes import parking_blueprint
-from routes.activity_routes import activity_blueprint
+from rest_api.db.database import initialize_database
+from rest_api.routes.cars_routes import cars_blueprint
+from rest_api.routes.parking_routes import parking_blueprint
+from rest_api.routes.activity_routes import activity_blueprint
 
 app = Flask(__name__)
 

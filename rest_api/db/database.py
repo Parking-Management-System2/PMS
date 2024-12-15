@@ -1,6 +1,7 @@
+import os
 import sqlite3
 
-DB_FILE = "parking_management.db"
+DB_FILE = os.path.join(os.path.dirname(__file__), "parking_management.db")
 INIT_SQL_FILE = "db/init.sql"
 
 
