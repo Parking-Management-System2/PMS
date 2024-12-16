@@ -17,6 +17,27 @@ def add_car(registration_number, car_status):
     conn.close()
 
 
+def update_car_status(car_id, car_status):
+    """Updates the status of a car."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE cars
+        SET car_status = ?
+        WHERE car_id = ?;
+        """,
+        (car_status, car_id),
+    )
+
+    if cursor.rowcount == 0:
+        conn.close()
+        raise ValueError("No car found with the given ID")
+
+    conn.commit()
+    conn.close()
+
+
 def get_all_cars():
     """Fetches all cars from the Cars table."""
     conn = get_connection()
