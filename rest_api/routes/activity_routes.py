@@ -45,7 +45,8 @@ def list_activities():
                     'car_id': {'type': 'integer'},
                     'spot_id': {'type': 'integer'},
                     'entrance_timestamp': {'type': 'string'},
-                    'leave_timestamp': {'type': 'string'}
+                    'leave_timestamp': {'type': 'string'},
+                    'status': {'type': 'string'}
                 }
             }
         }
@@ -62,8 +63,9 @@ def create_activity():
         spot_id = data.get("spot_id")
         entrance_timestamp = data.get("entrance_timestamp")
         leave_timestamp = data.get("leave_timestamp")  # Optional
+        status = data.get("status", "active")  # Default to "active" if not provided
 
-        create_activity_service(car_id, spot_id, entrance_timestamp, leave_timestamp)
+        create_activity_service(car_id, spot_id, entrance_timestamp, leave_timestamp, status)
         return jsonify({"message": "Activity recorded successfully"}), 201
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

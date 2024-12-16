@@ -5,10 +5,10 @@ DROP TABLE IF EXISTS `activities`;
 CREATE TABLE IF NOT EXISTS `cars` (
  `car_id` integer primary key NOT NULL UNIQUE,
  `registration_number` TEXT NOT NULL,
- `car_status` TEXT NOT NULL CHECK(car_status IN ('active', 'blocked'))
+ `car_status` TEXT NOT NULL CHECK(car_status IN ('active', 'blocked')) --- wpolrzedne samochodu
 );
 
-CREATE TABLE IF NOT EXISTS `parking_spots` (
+CREATE TABLE IF NOT EXISTS `parking_spots` ( --- wspolrzednie miejsca parkingowego
  `spot_id` integer primary key NOT NULL UNIQUE,
  `car_id` INTEGER,
  `spot_number` INTEGER NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `activities` (
  `activity_id` integer primary key NOT NULL UNIQUE,
  `car_id` INTEGER NOT NULL,
  `spot_id` INTEGER,
- `entrance_timestamp` TEXT NOT NULL,
+ `entrance_timestamp` TEXT NOT NULL, --- zmienic na format daty
  `leave_timestamp` TEXT NOT NULL,
  `status` TEXT NOT NULL CHECK(status IN ('active', 'completed', 'cancelled')),
 FOREIGN KEY(`car_id`) REFERENCES `cars`(`car_id`),

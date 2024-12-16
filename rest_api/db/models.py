@@ -5,16 +5,18 @@ from rest_api.db.database import get_connection
 def add_car(registration_number, car_status):
     """Adds a new car to the Cars table."""
     conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        INSERT INTO cars (registration_number, car_status)
-        VALUES (?, ?);
-        """,
-        (registration_number, car_status),
-    )
-    conn.commit()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO cars (registration_number, car_status)
+            VALUES (?, ?);
+            """,
+            (registration_number, car_status),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def update_car_status(car_id, car_status):
@@ -97,16 +99,16 @@ def update_parking_spot_status(spot_id, car_id):
 
 
 # Activity Table Operations
-def record_activity(car_id, spot_id, enterance_timestamp, leave_timestamp=None):
+def record_activity(car_id, spot_id, entrance_timestamp, leave_timestamp=None, status=None):
     """Records activity for a car in the parking lot."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO activities (car_id, spot_id, entrance_timestamp, leave_timestamp)
-        VALUES (?, ?, ?, ?);
+        INSERT INTO activities (car_id, spot_id, entrance_timestamp, leave_timestamp, status)
+        VALUES (?, ?, ?, ?, ?);
         """,
-        (car_id, spot_id, enterance_timestamp, leave_timestamp),
+        (car_id, spot_id, entrance_timestamp, leave_timestamp, status),
     )
     conn.commit()
     conn.close()
