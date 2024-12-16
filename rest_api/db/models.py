@@ -2,16 +2,16 @@ from rest_api.db.database import get_connection
 
 
 # Cars Table Operations
-def add_car(registration_number):
+def add_car(registration_number, car_status):
     """Adds a new car to the Cars table."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO cars (registration_number)
-        VALUES (?);
+        INSERT INTO cars (registration_number, car_status)
+        VALUES (?, ?);
         """,
-        (registration_number,),
+        (registration_number, car_status),
     )
     conn.commit()
     conn.close()

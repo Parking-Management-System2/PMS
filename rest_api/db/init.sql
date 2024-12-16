@@ -4,7 +4,8 @@ DROP TABLE IF EXISTS `activities`;
 
 CREATE TABLE IF NOT EXISTS `cars` (
  `car_id` integer primary key NOT NULL UNIQUE,
- `registration_number` TEXT NOT NULL
+ `registration_number` TEXT NOT NULL,
+ `car_status` TEXT NOT NULL CHECK(car_status IN ('active', 'blocked'))
 );
 
 CREATE TABLE IF NOT EXISTS `parking_spots` (
@@ -26,17 +27,17 @@ FOREIGN KEY(`spot_id`) REFERENCES `parking_spots`(`spot_id`)
 );
 
 -- Insert sample data into Cars table
-INSERT INTO `cars` (`car_id`, `registration_number`) VALUES
-(1, 'ABC123'),
-(2, 'DEF456'),
-(3, 'GHI789'),
-(4, 'JKL012'),
-(5, 'MNO345'),
-(6, 'PQR678'),
-(7, 'STU901'),
-(8, 'VWX234'),
-(9, 'YZA567'),
-(10, 'BCD890');
+INSERT INTO `cars` (`car_id`, `registration_number`, `car_status`) VALUES
+(1, 'ABC123', 'active'),
+(2, 'DEF456', 'active'),
+(3, 'GHI789', 'active'),
+(4, 'JKL012', 'active'),
+(5, 'MNO345', 'active'),
+(6, 'PQR678', 'active'),
+(7, 'STU901', 'active'),
+(8, 'VWX234', 'active'),
+(9, 'YZA567', 'active'),
+(10, 'BCD890', 'active');
 
 -- Insert sample data into Parking_spot table
 INSERT INTO `parking_spots` (`spot_id`, `car_id`, `spot_number`) VALUES

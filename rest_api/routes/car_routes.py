@@ -15,7 +15,8 @@ cars_blueprint = Blueprint("cars", __name__)
                     'type': 'object',
                     'properties': {
                         'car_id': {'type': 'integer'},
-                        'registration_number': {'type': 'string'}
+                        'registration_number': {'type': 'string'},
+                        'car_status': {'type': 'string'}
                     }
                 }
             }
@@ -37,7 +38,8 @@ def list_cars():
             'schema': {
                 'type': 'object',
                 'properties': {
-                    'registration_number': {'type': 'string'}
+                    'registration_number': {'type': 'string'},
+                    'car_status': {'type': 'string'}
                 }
             }
         }
@@ -52,7 +54,8 @@ def create_car():
     try:
         data = request.get_json()
         registration_number = data.get("registration_number")
-        create_car_service(registration_number)
+        car_status = data.get("car_status")
+        create_car_service(registration_number, car_status)
         return jsonify({"message": "Car added successfully"}), 201
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
