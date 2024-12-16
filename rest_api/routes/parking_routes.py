@@ -6,7 +6,7 @@ from rest_api.services.parking_service import (
 )
 from rest_api.db.models import update_parking_spot_status
 
-parking_blueprint = Blueprint("parking", __name__)
+parking_blueprint = Blueprint("parking_spots", __name__)
 
 @parking_blueprint.route("/available", methods=["GET"])
 @swag_from({

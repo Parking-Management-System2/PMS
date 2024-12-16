@@ -1,25 +1,26 @@
-DROP TABLE IF EXISTS`cars`;
-DROP TABLE IF EXISTS`parking_spots`;
-DROP TABLE IF EXISTS`activities`;
+DROP TABLE IF EXISTS `cars`;
+DROP TABLE IF EXISTS `parking_spots`;
+DROP TABLE IF EXISTS `activities`;
 
 CREATE TABLE IF NOT EXISTS `cars` (
-	`car_id` integer primary key NOT NULL UNIQUE,
-	`registration_number` TEXT NOT NULL
+ `car_id` integer primary key NOT NULL UNIQUE,
+ `registration_number` TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS `parking_spots` (
-	`spot_id` integer primary key NOT NULL UNIQUE,
-	`car_id` INTEGER,
-	`spot_number` INTEGER NOT NULL,
+ `spot_id` integer primary key NOT NULL UNIQUE,
+ `car_id` INTEGER,
+ `spot_number` INTEGER NOT NULL,
 FOREIGN KEY(`car_id`) REFERENCES `cars`(`car_id`)
 );
 
 CREATE TABLE IF NOT EXISTS `activities` (
-	`activity_id` integer primary key NOT NULL UNIQUE,
-	`car_id` INTEGER NOT NULL,
-	`spot_id` INTEGER,
-	`entrance_timestamp` TEXT NOT NULL,
-	`leave_timestamp` TEXT NOT NULL,
+ `activity_id` integer primary key NOT NULL UNIQUE,
+ `car_id` INTEGER NOT NULL,
+ `spot_id` INTEGER,
+ `entrance_timestamp` TEXT NOT NULL,
+ `leave_timestamp` TEXT NOT NULL,
+ `status` TEXT NOT NULL CHECK(status IN ('active', 'completed', 'cancelled')),
 FOREIGN KEY(`car_id`) REFERENCES `cars`(`car_id`),
 FOREIGN KEY(`spot_id`) REFERENCES `parking_spots`(`spot_id`)
 );
@@ -51,14 +52,14 @@ INSERT INTO `parking_spots` (`spot_id`, `car_id`, `spot_number`) VALUES
 (10, 7, 110);
 
 -- Insert sample data into activity table
-INSERT INTO `activities` (`activity_id`, `car_id`, `spot_id`, `entrance_timestamp`, `leave_timestamp`) VALUES
-(1, 1, 1, '2024-12-01 08:00:00', '2024-12-01 10:00:00'),
-(2, 2, 2, '2024-12-01 09:00:00', '2024-12-01 11:30:00'),
-(3, 3, 3, '2024-12-01 10:00:00', '2024-12-01 12:00:00'),
-(4, 4, 5, '2024-12-01 07:30:00', '2024-12-01 09:45:00'),
-(5, 5, 6, '2024-12-01 08:15:00', '2024-12-01 10:15:00'),
-(6, 6, 8, '2024-12-01 06:00:00', '2024-12-01 08:30:00'),
-(7, 7, 10, '2024-12-01 09:45:00', '2024-12-01 11:00:00'),
-(8, 8, NULL, '2024-12-01 10:30:00', '2024-12-01 12:30:00'),
-(9, 9, NULL, '2024-12-01 07:00:00', '2024-12-01 08:00:00'),
-(10, 10, NULL, '2024-12-01 08:30:00', '2024-12-01 09:30:00');
+INSERT INTO `activities` (`activity_id`, `car_id`, `spot_id`, `entrance_timestamp`, `leave_timestamp`, `status`) VALUES
+(1, 1, 1, '2024-12-01 08:00:00', '2024-12-01 10:00:00', 'completed'),
+(2, 2, 2, '2024-12-01 09:00:00', '2024-12-01 11:30:00', 'completed'),
+(3, 3, 3, '2024-12-01 10:00:00', '2024-12-01 12:00:00', 'completed'),
+(4, 4, 5, '2024-12-01 07:30:00', '2024-12-01 09:45:00', 'completed'),
+(5, 5, 6, '2024-12-01 08:15:00', '2024-12-01 10:15:00', 'completed'),
+(6, 6, 8, '2024-12-01 06:00:00', '2024-12-01 08:30:00', 'completed'),
+(7, 7, 10, '2024-12-01 09:45:00', '2024-12-01 11:00:00', 'completed'),
+(8, 8, NULL, '2024-12-01 10:30:00', '2024-12-01 12:30:00', 'completed'),
+(9, 9, NULL, '2024-12-01 07:00:00', '2024-12-01 08:00:00', 'completed'),
+(10, 10, NULL, '2024-12-01 08:30:00', '2024-12-01 09:30:00', 'completed');

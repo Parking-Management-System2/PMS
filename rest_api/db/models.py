@@ -1,5 +1,6 @@
 from rest_api.db.database import get_connection
 
+
 # Cars Table Operations
 def add_car(registration_number):
     """Adds a new car to the Cars table."""
@@ -98,3 +99,24 @@ def get_all_activities():
     activities = cursor.fetchall()
     conn.close()
     return activities
+
+
+def update_activity(activity_id, car_id, spot_id, entrance_timestamp, leave_timestamp=None, status=None):
+    """Updates an existing activity."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE activities
+        SET car_id = ?, spot_id = ?, entrance_timestamp = ?, leave_timestamp = ?, status = ?
+        WHERE activity_id = ?;
+        """,
+        (car_id, spot_id, entrance_timestamp, leave_timestamp, status, activity_id),
+    )
+
+    if cursor.rowcount == 0:
+        conn.close()
+        raise ValueError("No activity found with the given ID")
+
+    conn.commit()
+    conn.close()
