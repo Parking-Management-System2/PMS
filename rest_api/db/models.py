@@ -7,7 +7,7 @@ def add_car(registration_number):
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO Cars (registration_number)
+        INSERT INTO cars (registration_number)
         VALUES (?);
         """,
         (registration_number,),
@@ -20,7 +20,7 @@ def get_all_cars():
     """Fetches all cars from the Cars table."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Cars;")
+    cursor.execute("SELECT * FROM cars;")
     cars = cursor.fetchall()
     conn.close()
     return cars
@@ -33,7 +33,7 @@ def add_parking_spot(spot_number, car_id=None):
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO Parking_spot (spot_number, car_id)
+        INSERT INTO parking_spots (spot_number, car_id)
         VALUES (?, ?);
         """,
         (spot_number, car_id),
@@ -46,7 +46,7 @@ def get_available_parking_spots():
     """Fetches all available parking spots."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Parking_spot WHERE car_id IS NULL;")
+    cursor.execute("SELECT * FROM parking_spots WHERE car_id IS NULL;")
     spots = cursor.fetchall()
     conn.close()
     return spots
@@ -59,7 +59,7 @@ def update_parking_spot_status(spot_id, car_id):
 
     cursor.execute(
         """
-        UPDATE Parking_spot
+        UPDATE parking_spots
         SET car_id = ?
         WHERE spot_id = ?;
         """,
@@ -81,7 +81,7 @@ def record_activity(car_id, spot_id, enterance_timestamp, leave_timestamp=None):
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO activity (car_id, spot_id, enterance_timestamp, leave_timestamp)
+        INSERT INTO activities (car_id, spot_id, entrance_timestamp, leave_timestamp)
         VALUES (?, ?, ?, ?);
         """,
         (car_id, spot_id, enterance_timestamp, leave_timestamp),
@@ -94,7 +94,7 @@ def get_all_activities():
     """Fetches all activities from the Activity table."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM activity;")
+    cursor.execute("SELECT * FROM activities;")
     activities = cursor.fetchall()
     conn.close()
     return activities

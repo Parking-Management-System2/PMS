@@ -16,7 +16,7 @@ class TestApp(unittest.TestCase):
         response = self.app.post('/activity/', json={
             "car_id": 1,
             "spot_id": 1,
-            "enterance_timestamp": "2023-01-01T00:00:00Z",
+            "entrance_timestamp": "2023-01-01T00:00:00Z",
             "leave_timestamp": "2023-01-01T01:00:00Z"
         })
         self.assertEqual(response.status_code, 201)
