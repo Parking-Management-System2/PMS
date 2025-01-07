@@ -20,7 +20,7 @@ swagger_config = {
     ],
     "static_url_path": "/flasgger_static",
     "swagger_ui": True,
-    "specs_route": "/apidocs/",
+    "specs_route": "/",
     "title": "Parking Management REST API",
     "description": "This is the API documentation for the Parking Management System. It includes endpoints for managing cars, parking spots, and activities."
 }
