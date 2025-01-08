@@ -1,15 +1,17 @@
 import requests
+from redis.car_data import CarData
 
 
 def validate_plate_service_enter(license_plate):
     # call redis function to validate the data
-    redis_response = True
+    car_data = CarData()
+    validation_result = car_data.validate_car_entry(license_plate)
 
     url = "http://localhost:5000/activities"
     data = {
         "registration_number": license_plate,
         "spot_id": None,
-        "type": "entrance" if redis_response else "rejected_entrance"
+        "type": "entrance" if validation_result.is_valid else "rejected_entrance"
     }
     response = requests.post(url, json=data)
     if response.status_code == 201:
