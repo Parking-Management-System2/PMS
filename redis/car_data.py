@@ -47,14 +47,22 @@ class CarData(RedisClient):
                 break
 
         if reserved_slot:
-            if slot_info.get('status') == 'available':
+            if slot_info.get('status') == 'reserved':
+                self.set_car_info(registration_number, 'parked', 0, 0, 0, 0)  # Add car entry to Redis
                 return ValidationResult(True, f"Reserved slot {reserved_slot} is available")
             else:
+                # Check if there is any parking slot which has reserved_car_registration empty and status available
+                for slot_id in ParkingSlotData.get_all_parking_slots():
+                    slot_info = ParkingSlotData.get_parking_slot_info(slot_id)
+                    if slot_info.get('status') == 'available' and not slot_info.get('reserved_car_registration'):
+                        self.set_car_info(registration_number, 'parked', 0, 0, 0, 0)  # Add car entry to Redis
+                        return ValidationResult(True, f"Free slot {slot_id} is available")
                 return ValidationResult(False, f"Reserved slot {reserved_slot} is occupied")
         else:
             for slot_id in ParkingSlotData.get_all_parking_slots():
                 slot_info = ParkingSlotData.get_parking_slot_info(slot_id)
                 if slot_info.get('status') == 'available' and not slot_info.get('reserved_car_registration'):
+                    self.set_car_info(registration_number, 'parked', 0, 0, 0, 0)  # Add car entry to Redis
                     return ValidationResult(True, f"Free slot {slot_id} is available")
 
             return ValidationResult(False, "No free slots available")
