@@ -1,16 +1,39 @@
 import requests
 
 
-class LicensePlateValidator:
-    API_URL = "http://localhost:5000"
+def validate_plate_service_enter(license_plate):
+    # call redis function to validate the data
+    redis_response = True
 
-    def validate_plate(self, plate_number):
-        response = requests.post(self.API_URL, json={"plate_number": plate_number})
-        if response.status_code == 200:
-            return response.json().get("allowed", False)
-        else:
-            response.raise_for_status()
+    url = "http://localhost:5000/activities"
+    data = {
+        "registration_number": license_plate,
+        "spot_id": None,
+        "type": "entrance" if redis_response else "rejected_entrance"
+    }
+    response = requests.post(url, json=data)
+    if response.status_code == 201:
+        return response.json()
+    else:
+        return {"error": "Failed to add activity", "status_code": response.status_code}
 
 
-licence_plate_validator = LicensePlateValidator()
-print(licence_plate_validator.validate_plate("ABC123"))
+def validate_plate_service_exit(license_plate):
+    # call redis function to validate the data
+    redis_response = True
+
+    url = "http://localhost:5000/activities"
+
+    data = {
+        "registration_number": license_plate,
+        "spot_id": None,
+        "type": "exit" if redis_response else "rejected_exit"
+    }
+    response = requests.post(url, json=data)
+    if response.status_code == 201:
+        return response.json()
+    else:
+        return {"error": "Failed to add activity", "status_code": response.status_code}
+
+
+validate_plate_service_enter("ABC123")
