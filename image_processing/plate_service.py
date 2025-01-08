@@ -36,4 +36,3 @@ def validate_plate_service_exit(license_plate):
         return {"error": "Failed to add activity", "status_code": response.status_code}
 
 
-validate_plate_service_enter("ABC123")
