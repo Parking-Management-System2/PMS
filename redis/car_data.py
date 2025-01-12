@@ -1,12 +1,14 @@
-from redis_client import RedisClient
 from redis.parking_slot_data import ParkingSlotData
+from redis_client import RedisClient
 from validation_result import ValidationResult
+
 
 class CarData(RedisClient):
     def __init__(self):
         super().__init__()
 
-    def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y):
+    def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x,
+                     position_bottom_y):
         key = f"car:{registration_number}"
         self.hset(key, 'status', status)
         self.hset(key, 'position_upper_x', position_upper_x)
@@ -22,7 +24,8 @@ class CarData(RedisClient):
         key = f"car:{registration_number}"
         self.hset(key, "status", new_status)
 
-    def update_car_position(self, registration_number, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y):
+    def update_car_position(self, registration_number, position_upper_x, position_upper_y, position_bottom_x,
+                            position_bottom_y):
         key = f"car:{registration_number}"
         self.hset(key, 'position_upper_x', position_upper_x)
         self.hset(key, 'position_upper_y', position_upper_y)

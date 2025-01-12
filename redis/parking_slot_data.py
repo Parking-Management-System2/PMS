@@ -1,11 +1,13 @@
 from redis_client import RedisClient
 
+
 class ParkingSlotData(RedisClient):
     def __init__(self):
         super().__init__()
 
     @classmethod
-    def set_parking_slot_info(cls, slot_id, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y, status, current_car_registration=None, reserved_car_registration=None):
+    def set_parking_slot_info(cls, slot_id, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y,
+                              status, current_car_registration=None):
         key = f"parking_slot:{slot_id}"
         cls().hset(key, "position_upper_x", position_upper_x)
         cls().hset(key, "position_upper_y", position_upper_y)
@@ -14,8 +16,6 @@ class ParkingSlotData(RedisClient):
         cls().hset(key, "status", status)
         if current_car_registration:
             cls().hset(key, "current_car_registration", current_car_registration)
-        if reserved_car_registration:
-            cls().hset(key, "reserved_car_registration", reserved_car_registration)
 
     @classmethod
     def get_parking_slot_info(cls, slot_id):

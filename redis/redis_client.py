@@ -1,5 +1,6 @@
 import redis
 
+
 class RedisClient:
     def __init__(self, host='localhost', port=6379, db=0):
         self.host = host
@@ -14,13 +15,13 @@ class RedisClient:
             return True
         except ConnectionError:
             return False
-        
+
     def set(self, key, value):
         return self.client.set(key, value)
-    
+
     def get(self, key):
         return self.client.get(key)
-    
+
     def hset(self, key, field, value):
         self.client.hset(key, field, value)
 
@@ -34,4 +35,4 @@ class RedisClient:
         return self.client.hdel(key, field)
 
     def delete(self, key):
-        return self.client.delete(key)    
+        return self.client.delete(key)
