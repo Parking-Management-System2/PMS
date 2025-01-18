@@ -39,7 +39,7 @@ def files():
     else:
         os.makedirs(image_frames)
 
-    src_vid = cv2.VideoCapture('test_video14.mp4')
+    src_vid = cv2.VideoCapture('../data/test_video14.mp4')
     return src_vid
 
 def process(src_vid):
