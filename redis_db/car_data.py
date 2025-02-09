@@ -1,6 +1,6 @@
-from redis_client import RedisClient
-from redis.parking_slot_data import ParkingSlotData
-from validation_result import ValidationResult
+from .redis_client import RedisClient
+from .parking_slot_data import ParkingSlotData
+from .validation_result import ValidationResult
 
 class CarData(RedisClient):
     def __init__(self):
@@ -32,6 +32,20 @@ class CarData(RedisClient):
     def remove_car(self, registration_number):
         key = f"car:{registration_number}"
         self.hdel(self, key)
+
+    def display_all_cars(self):
+        keys = self.keys('car:*')
+        for key in keys:
+            car_info = self.hgetall(key)
+            print(f"Car {key}:")
+            for field, value in car_info.items():
+                print(f"  {field}: {value}")
+
+    def update_cars(self, cars):
+        for car in cars:
+            x, y, w, h = car
+            registration_number = f"car_{x}_{y}"
+            self.set_car_info(registration_number, 'detected', x, y, x + w, y + h)
 
     def validate_car_entry(self, registration_number):
         car_info = self.get_car_info(registration_number)

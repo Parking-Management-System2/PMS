@@ -14,13 +14,13 @@ class RedisClient:
             return True
         except ConnectionError:
             return False
-        
+
     def set(self, key, value):
         return self.client.set(key, value)
-    
+
     def get(self, key):
         return self.client.get(key)
-    
+
     def hset(self, key, field, value):
         self.client.hset(key, field, value)
 
@@ -34,4 +34,7 @@ class RedisClient:
         return self.client.hdel(key, field)
 
     def delete(self, key):
-        return self.client.delete(key)    
+        return self.client.delete(key)
+
+    def keys(self, pattern):
+        return self.client.keys(pattern)
