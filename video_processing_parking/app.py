@@ -1,5 +1,12 @@
+import sys
+import os
 import cv2
 import numpy as np
+
+# Add the parent directory to the sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from redis_db.car_data import CarData
 
 def preprocess_image(frame):
     # Convert to grayscale
@@ -43,12 +50,17 @@ def detect_cars(frame):
 def process_video(video_path, skip_frames=3):
     # Open the video file
     cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print(f"Error: Could not open video file {video_path}")
+        return
 
+    # car_data = CarData()
     frame_count = 0
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
+            print("Error: Could not read frame")
             break
 
         frame_count += 1
@@ -59,6 +71,7 @@ def process_video(video_path, skip_frames=3):
 
         # Detect cars in the frame and get debug images
         cars, edges = detect_cars(frame)
+        # car_data.update_cars(cars)
 
         # Draw rectangles around detected cars
         for (x, y, w, h) in cars:
@@ -67,6 +80,7 @@ def process_video(video_path, skip_frames=3):
         # Display all debugging windows
         cv2.imshow('Original', frame)
         cv2.imshow('Edges', edges)
+        # car_data.display_all_cars()
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -78,5 +92,5 @@ def process_video(video_path, skip_frames=3):
 
 # Use the script
 if __name__ == "__main__":
-    video_path = "../data/2/PARKING.mov"
+    video_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
     process_video(video_path, skip_frames=3)

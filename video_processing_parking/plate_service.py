@@ -1,9 +1,9 @@
 import requests
-from redis.car_data import CarData
+from redis_db.car_data import CarData
 
 
 def validate_plate_service_enter(license_plate):
-    # call redis function to validate the data
+    # call redis_db function to validate the data
     car_data = CarData()
     validation_result = car_data.validate_car_entry(license_plate)
 
@@ -21,7 +21,7 @@ def validate_plate_service_enter(license_plate):
 
 
 def validate_plate_service_exit(license_plate):
-    # call redis function to validate the data
+    # call redis_db function to validate the data
     redis_response = True
 
     url = "http://localhost:5000/activities"

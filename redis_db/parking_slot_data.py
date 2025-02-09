@@ -1,4 +1,4 @@
-from redis_client import RedisClient
+from .redis_client import RedisClient
 
 class ParkingSlotData(RedisClient):
     def __init__(self):
