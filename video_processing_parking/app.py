@@ -54,7 +54,7 @@ def process_video(video_path, skip_frames=3):
         print(f"Error: Could not open video file {video_path}")
         return
 
-    # car_data = CarData()
+    car_data = CarData()
     frame_count = 0
 
     while cap.isOpened():
@@ -71,7 +71,7 @@ def process_video(video_path, skip_frames=3):
 
         # Detect cars in the frame and get debug images
         cars, edges = detect_cars(frame)
-        # car_data.update_cars(cars)
+        car_data.update_cars(cars)
 
         # Draw rectangles around detected cars
         for (x, y, w, h) in cars:
@@ -80,7 +80,9 @@ def process_video(video_path, skip_frames=3):
         # Display all debugging windows
         cv2.imshow('Original', frame)
         cv2.imshow('Edges', edges)
-        # car_data.display_all_cars()
+
+        if frame_count % 100 == 0:
+            car_data.display_all_cars()
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
