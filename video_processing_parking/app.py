@@ -8,52 +8,72 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from redis_db.car_data import CarData
 
+# Constants for car detection parameters
+GAUSSIAN_BLUR_KERNEL_SIZE = (5, 5)
+MORPH_OPEN_KERNEL_SIZE = (2, 2)
+CANNY_EDGE_THRESHOLD1 = 80
+CANNY_EDGE_THRESHOLD2 = 200
+ADAPTIVE_THRESH_BLOCK_SIZE = 11
+ADAPTIVE_THRESH_C = 2
+MIN_CAR_CONTOUR_AREA = 12000
+MAX_CAR_CONTOUR_AREA = 18000
+
+# Constants for parking slot detection parameters
+MIN_PARKING_SLOT_CONTOUR_AREA = 22000
+MAX_PARKING_SLOT_CONTOUR_AREA = 38000
+
+SKIP_FRAMES = 3
+VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
+MAX_UNDETECTED_FRAMES = 250  # Maximum number of frames a car can be undetected before being removed
+
 def preprocess_image(frame):
     # Convert to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Apply Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    blurred = cv2.GaussianBlur(gray, GAUSSIAN_BLUR_KERNEL_SIZE, 0)
 
     # Apply morphological opening to remove noise and small objects
-    kernel = np.ones((2, 2), np.uint8)  # Smaller kernel for opening
+    kernel = np.ones(MORPH_OPEN_KERNEL_SIZE, np.uint8)  # Smaller kernel for opening
     opened = cv2.morphologyEx(blurred, cv2.MORPH_OPEN, kernel)
 
     return opened
 
-def detect_cars(frame):
+def detect_objects(frame):
     # Preprocess the frame to enhance contours
     processed_frame = preprocess_image(frame)
 
     # Apply edge detection (Canny)
-    edges = cv2.Canny(processed_frame, 80, 200)
+    edges = cv2.Canny(processed_frame, CANNY_EDGE_THRESHOLD1, CANNY_EDGE_THRESHOLD2)
 
     # Find contours
-    adaptive_thresh = cv2.adaptiveThreshold(processed_frame, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    adaptive_thresh = cv2.adaptiveThreshold(processed_frame, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, ADAPTIVE_THRESH_BLOCK_SIZE, ADAPTIVE_THRESH_C)
     contours, _ = cv2.findContours(adaptive_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # Filter contours based on area and shape
-    min_area = 12000
-    max_area = 18000
     cars = []
+    parking_slots = []
     for contour in contours:
         area = cv2.contourArea(contour)
-        if min_area < area < max_area:
-            # Get bounding rectangle
+        if MIN_CAR_CONTOUR_AREA < area < MAX_CAR_CONTOUR_AREA:
+            # Get bounding rectangle for cars
             x, y, w, h = cv2.boundingRect(contour)
-
-            # Append detected car bounding box
             cars.append((x, y, w, h))
+        elif MIN_PARKING_SLOT_CONTOUR_AREA < area < MAX_PARKING_SLOT_CONTOUR_AREA:
+            # Get bounding rectangle for parking slots
+            x, y, w, h = cv2.boundingRect(contour)
+            parking_slots.append((x, y, w, h))
 
-    return cars, edges
+    return cars, parking_slots, edges
 
-def process_video(video_path, skip_frames=3):
+def process_video(video_path, skip_frames=SKIP_FRAMES):
     # Open the video file
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video file {video_path}")
         return
 
+    # car_data = CarData()
     # car_data = CarData()
     frame_count = 0
 
@@ -69,18 +89,24 @@ def process_video(video_path, skip_frames=3):
         if frame_count % skip_frames != 0:
             continue
 
-        # Detect cars in the frame and get debug images
-        cars, edges = detect_cars(frame)
-        # car_data.update_cars(cars)
+        # Detect cars and parking slots in the frame and get debug images
+        cars, parking_slots, edges = detect_objects(frame)
+        # car_data.update_cars(cars, frame_count, MAX_UNDETECTED_FRAMES)
 
         # Draw rectangles around detected cars
         for (x, y, w, h) in cars:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red rectangle
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red rectangle for cars
+
+        # Draw rectangles around detected parking slots
+        for (x, y, w, h) in parking_slots:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green rectangle for parking slots
 
         # Display all debugging windows
         cv2.imshow('Original', frame)
         cv2.imshow('Edges', edges)
-        # car_data.display_all_cars()
+
+        # if frame_count % 100 == 0:
+        #     car_data.display_all_cars()
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -92,5 +118,4 @@ def process_video(video_path, skip_frames=3):
 
 # Use the script
 if __name__ == "__main__":
-    video_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
-    process_video(video_path, skip_frames=3)
+    process_video(VIDEO_PATH, SKIP_FRAMES)

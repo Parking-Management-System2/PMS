@@ -1,8 +1,3 @@
 .idea
-rest_api/db/parking_management.db
-rest_api/__pycache__/
-rest_api/test/__pycache__/
-rest_api/db/__pycache__/
-rest_api/routes/__pycache__/
-rest_api/services/__pycache__/
+redis_db/__pycache__/
 data/*
