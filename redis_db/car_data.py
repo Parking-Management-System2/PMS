@@ -5,6 +5,7 @@ from .validation_result import ValidationResult
 class CarData(RedisClient):
     def __init__(self):
         super().__init__()
+        self.car_last_seen = {}
 
     def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y):
         key = f"car:{registration_number}"
@@ -31,52 +32,23 @@ class CarData(RedisClient):
 
     def remove_car(self, registration_number):
         key = f"car:{registration_number}"
-        self.hdel(self, key)
+        self.delete(key)
 
     def display_all_cars(self):
         keys = self.keys('car:*')
         for key in keys:
-            car_info = self.hgetall(key)
-            print(f"Car {key}:")
-            for field, value in car_info.items():
-                print(f"  {field}: {value}")
+            print(self.hgetall(key))
 
-    def update_cars(self, cars):
-        for car in cars:
-            x, y, w, h = car
-            registration_number = f"car_{x}_{y}"
+    def update_cars(self, cars, frame_count, max_undetected_frames):
+        detected_cars = set()
+        for (x, y, w, h) in cars:
+            registration_number = f"{x}_{y}_{w}_{h}"
             self.set_car_info(registration_number, 'detected', x, y, x + w, y + h)
+            self.car_last_seen[registration_number] = frame_count
+            detected_cars.add(registration_number)
 
-    def validate_car_entry(self, registration_number):
-        car_info = self.get_car_info(registration_number)
-        if car_info:
-            return ValidationResult(False, "Car already exists")
-
-        reserved_slot = None
-        slot_info = None
-        for slot_id in ParkingSlotData.get_all_parking_slots():
-            slot_info = ParkingSlotData.get_parking_slot_info(slot_id)
-            if slot_info.get('reserved_car_registration') == registration_number:
-                reserved_slot = slot_id
-                break
-
-        if reserved_slot:
-            if slot_info.get('status') == 'reserved':
-                self.set_car_info(registration_number, 'parked', 0, 0, 0, 0)  # Add car entry to Redis
-                return ValidationResult(True, f"Reserved slot {reserved_slot} is available")
-            else:
-                # Check if there is any parking slot which has reserved_car_registration empty and status available
-                for slot_id in ParkingSlotData.get_all_parking_slots():
-                    slot_info = ParkingSlotData.get_parking_slot_info(slot_id)
-                    if slot_info.get('status') == 'available' and not slot_info.get('reserved_car_registration'):
-                        self.set_car_info(registration_number, 'parked', 0, 0, 0, 0)  # Add car entry to Redis
-                        return ValidationResult(True, f"Free slot {slot_id} is available")
-                return ValidationResult(False, f"Reserved slot {reserved_slot} is occupied")
-        else:
-            for slot_id in ParkingSlotData.get_all_parking_slots():
-                slot_info = ParkingSlotData.get_parking_slot_info(slot_id)
-                if slot_info.get('status') == 'available' and not slot_info.get('reserved_car_registration'):
-                    self.set_car_info(registration_number, 'parked', 0, 0, 0, 0)  # Add car entry to Redis
-                    return ValidationResult(True, f"Free slot {slot_id} is available")
-
-            return ValidationResult(False, "No free slots available")
+        # Remove cars that have not been detected for more than max_undetected_frames
+        for registration_number in list(self.car_last_seen.keys()):
+            if registration_number not in detected_cars and frame_count - self.car_last_seen[registration_number] > max_undetected_frames:
+                self.remove_car(registration_number)
+                del self.car_last_seen[registration_number]
