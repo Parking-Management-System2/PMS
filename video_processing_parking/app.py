@@ -74,7 +74,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
         return
 
     # car_data = CarData()
-    # car_data = CarData()
     frame_count = 0
 
     while cap.isOpened():
