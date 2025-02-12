@@ -66,14 +66,16 @@ def detect_objects(frame):
 
     return cars, parking_slots, edges
 
-def process_video(video_path, skip_frames=SKIP_FRAMES):
+def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None):
     # Open the video file
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video file {video_path}")
         return
 
-    car_data = CarData()
+    if car_data is None:
+        car_data = CarData()
+
     frame_count = 0
 
     while cap.isOpened():
