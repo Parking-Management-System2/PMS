@@ -105,7 +105,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None):
         # Draw a blue rectangle in the upper right corner
         height, width, _ = frame.shape
         upper_left_x = int(width * 2.5 / 4)
-        upper_left_y = int(height / 4)
+        upper_left_y = int(height * 0.6 / 4)
         bottom_right_x = width
         bottom_right_y = int(height * 2 / 4)
         cv2.rectangle(frame, (upper_left_x, upper_left_y), (bottom_right_x, bottom_right_y), (255, 0, 0), 2)  # Blue rectangle
