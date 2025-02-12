@@ -102,11 +102,29 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
 
         # Draw a blue rectangle in the upper right corner
         height, width, _ = frame.shape
-        upper_left_x = int(width * 2.7 // 4)
-        upper_left_y = int(height * 0.6 // 4)
+        upper_left_x = int(width * 2.5 / 4)
+        upper_left_y = int(height / 4)
         bottom_right_x = width
-        bottom_right_y = height * 2 // 4
+        bottom_right_y = int(height * 2 / 4)
         cv2.rectangle(frame, (upper_left_x, upper_left_y), (bottom_right_x, bottom_right_y), (255, 0, 0), 2)  # Blue rectangle
+
+        # Check if a car is located in the blue rectangle and if so update its status and position
+        car_in_blue_rectangle = None
+        for (x, y, w, h) in cars:
+            if upper_left_x <= x <= bottom_right_x and upper_left_y <= y <= bottom_right_y:
+                car_in_blue_rectangle = (x, y, w, h)
+                break
+
+        # If a car is found in the blue rectangle, update the most recently added car
+        if car_in_blue_rectangle:
+            most_recent_car = car_data.get_most_recent_car()
+            print(f"Most recent car: {most_recent_car}")  # Debug print
+            if most_recent_car and b'registration_number' in most_recent_car:
+                registration_number = most_recent_car[b'registration_number'].decode()
+                x, y, w, h = car_in_blue_rectangle
+                car_data.set_car_info(registration_number, 'moving', x, y, x + w, y + h)
+            else:
+                print("Error: No most recent car found or registration_number key missing")
 
         # Display all debugging windows
         cv2.imshow('Original', frame)
@@ -114,7 +132,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
 
         if frame_count % 100 == 0:
             car_data.display_all_cars()
-
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
