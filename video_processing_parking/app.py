@@ -73,7 +73,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
         print(f"Error: Could not open video file {video_path}")
         return
 
-    # car_data = CarData()
+    car_data = CarData()
     frame_count = 0
 
     while cap.isOpened():
@@ -90,7 +90,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
 
         # Detect cars and parking slots in the frame and get debug images
         cars, parking_slots, edges = detect_objects(frame)
-        # car_data.update_cars(cars, frame_count, MAX_UNDETECTED_FRAMES)
+        car_data.update_cars(cars, frame_count, MAX_UNDETECTED_FRAMES)
 
         # Draw rectangles around detected cars
         for (x, y, w, h) in cars:
@@ -104,8 +104,9 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
         cv2.imshow('Original', frame)
         cv2.imshow('Edges', edges)
 
-        # if frame_count % 100 == 0:
-        #     car_data.display_all_cars()
+        if frame_count % 100 == 0:
+            car_data.display_all_cars()
+
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
