@@ -128,7 +128,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
 
         # Display all debugging windows
         cv2.imshow('Original', frame)
-        cv2.imshow('Edges', edges)
 
         if frame_count % 100 == 0:
             car_data.display_all_cars()
