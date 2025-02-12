@@ -1,13 +1,15 @@
+import uuid
+
 from .redis_client import RedisClient
-from .parking_slot_data import ParkingSlotData
-from .validation_result import ValidationResult
+
 
 class CarData(RedisClient):
     def __init__(self):
         super().__init__()
         self.car_last_seen = {}
 
-    def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y):
+    def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x,
+                     position_bottom_y):
         key = f"car:{registration_number}"
         self.hset(key, 'status', status)
         self.hset(key, 'position_upper_x', position_upper_x)
@@ -23,7 +25,8 @@ class CarData(RedisClient):
         key = f"car:{registration_number}"
         self.hset(key, "status", new_status)
 
-    def update_car_position(self, registration_number, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y):
+    def update_car_position(self, registration_number, position_upper_x, position_upper_y, position_bottom_x,
+                            position_bottom_y):
         key = f"car:{registration_number}"
         self.hset(key, 'position_upper_x', position_upper_x)
         self.hset(key, 'position_upper_y', position_upper_y)
@@ -37,18 +40,56 @@ class CarData(RedisClient):
     def display_all_cars(self):
         keys = self.keys('car:*')
         for key in keys:
-            print(self.hgetall(key))
+            print(f'{key} : {self.hgetall(key)}')
+
+    def get_nearest_car(self, x, y, max_distance=50):
+        """Finds the nearest stored car within max_distance."""
+        keys = self.keys('car:*')
+        closest_car = None
+        min_distance = max_distance
+
+        for key in keys:
+            car_info = self.hgetall(key)
+            if not car_info:
+                continue
+
+            try:
+                car_x = int(car_info.get(b'position_upper_x', b'0').decode())
+                car_y = int(car_info.get(b'position_upper_y', b'0').decode())
+                distance = ((car_x - x) ** 2 + (car_y - y) ** 2) ** 0.5
+
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_car = key
+            except (KeyError, ValueError):
+                continue
+
+        return closest_car
 
     def update_cars(self, cars, frame_count, max_undetected_frames):
         detected_cars = set()
+
         for (x, y, w, h) in cars:
-            registration_number = f"{x}_{y}_{w}_{h}"
-            self.set_car_info(registration_number, 'detected', x, y, x + w, y + h)
+            existing_car_key = self.get_nearest_car(x, y)
+
+            if existing_car_key:
+                # Update existing car's position
+                self.hset(existing_car_key, 'position_upper_x', x)
+                self.hset(existing_car_key, 'position_upper_y', y)
+                self.hset(existing_car_key, 'position_bottom_x', x + w)
+                self.hset(existing_car_key, 'position_bottom_y', y + h)
+                registration_number = existing_car_key.decode().split(':')[1]
+            else:
+                # Generate a unique registration number
+                registration_number = str(uuid.uuid4())
+                self.set_car_info(registration_number, 'detected', x, y, x + w, y + h)
+
             self.car_last_seen[registration_number] = frame_count
             detected_cars.add(registration_number)
 
-        # Remove cars that have not been detected for more than max_undetected_frames
+        # Remove undetected cars
         for registration_number in list(self.car_last_seen.keys()):
-            if registration_number not in detected_cars and frame_count - self.car_last_seen[registration_number] > max_undetected_frames:
+            if registration_number not in detected_cars and frame_count - self.car_last_seen[
+                registration_number] > max_undetected_frames:
                 self.remove_car(registration_number)
                 del self.car_last_seen[registration_number]
