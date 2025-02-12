@@ -100,6 +100,14 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
         for (x, y, w, h) in parking_slots:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green rectangle for parking slots
 
+        # Draw a blue rectangle in the upper right corner
+        height, width, _ = frame.shape
+        upper_left_x = int(width * 2.7 // 4)
+        upper_left_y = int(height * 0.6 // 4)
+        bottom_right_x = width
+        bottom_right_y = height * 2 // 4
+        cv2.rectangle(frame, (upper_left_x, upper_left_y), (bottom_right_x, bottom_right_y), (255, 0, 0), 2)  # Blue rectangle
+
         # Display all debugging windows
         cv2.imshow('Original', frame)
         cv2.imshow('Edges', edges)
