@@ -1,7 +1,5 @@
 import uuid
-
 from .redis_client import RedisClient
-
 
 class CarData(RedisClient):
     def __init__(self):
@@ -16,6 +14,10 @@ class CarData(RedisClient):
         self.hset(key, 'position_upper_y', position_upper_y)
         self.hset(key, 'position_bottom_x', position_bottom_x)
         self.hset(key, 'position_bottom_y', position_bottom_y)
+        # Add the key to the ordered list if it doesn't already exist
+        if not self.client.sismember('car_keys_set', key):
+            self.client.rpush('car_keys', key)
+            self.client.sadd('car_keys_set', key)
 
     def get_car_info(self, registration_number):
         key = f"car:{registration_number}"
@@ -36,11 +38,31 @@ class CarData(RedisClient):
     def remove_car(self, registration_number):
         key = f"car:{registration_number}"
         self.delete(key)
+        # Remove the key from the ordered list and set
+        self.client.lrem('car_keys', 0, key)
+        self.client.srem('car_keys_set', key)
 
     def display_all_cars(self):
         keys = self.keys('car:*')
         for key in keys:
             print(f'{key} : {self.hgetall(key)}')
+
+    def get_all_cars(self):
+        keys = self.keys('car:*')
+        cars = []
+        for key in keys:
+            car_info = self.hgetall(key)
+            car_info['registration_number'] = key.decode().split(':')[1]
+            cars.append(car_info)
+        return cars
+
+    def get_most_recent_car(self):
+        # Get the last element from the ordered list
+        most_recent_key = self.client.lindex('car_keys', -1)
+        if most_recent_key:
+            registration_number = most_recent_key.decode().split(':')[1]
+            return self.get_car_info(registration_number)
+        return None
 
     def get_nearest_car(self, x, y, max_distance=50):
         """Finds the nearest stored car within max_distance."""
