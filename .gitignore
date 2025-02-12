@@ -1,5 +1,8 @@
 .idea
 redis_db/__pycache__/
+video_processing_gate/__pycache__/
+video_processing_parking/__pycache__/
+parking_system/__pycache__/
 data/*
 backend/db/__pycache__/
 backend/models/__pycache__/
