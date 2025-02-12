@@ -42,6 +42,14 @@ class CarData(RedisClient):
         self.client.lrem('car_keys', 0, key)
         self.client.srem('car_keys_set', key)
 
+    def remove_all_cars(self):
+        keys = self.keys('car:*')
+        for key in keys:
+            self.delete(key)
+        # Clear the ordered list and set
+        self.client.delete('car_keys')
+        self.client.delete('car_keys_set')    
+
     def display_all_cars(self):
         keys = self.keys('car:*')
         for key in keys:

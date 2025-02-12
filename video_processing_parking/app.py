@@ -66,14 +66,16 @@ def detect_objects(frame):
 
     return cars, parking_slots, edges
 
-def process_video(video_path, skip_frames=SKIP_FRAMES):
+def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None):
     # Open the video file
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Error: Could not open video file {video_path}")
         return
 
-    car_data = CarData()
+    if car_data is None:
+        car_data = CarData()
+
     frame_count = 0
 
     while cap.isOpened():
@@ -103,7 +105,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
         # Draw a blue rectangle in the upper right corner
         height, width, _ = frame.shape
         upper_left_x = int(width * 2.5 / 4)
-        upper_left_y = int(height / 4)
+        upper_left_y = int(height * 0.6 / 4)
         bottom_right_x = width
         bottom_right_y = int(height * 2 / 4)
         cv2.rectangle(frame, (upper_left_x, upper_left_y), (bottom_right_x, bottom_right_y), (255, 0, 0), 2)  # Blue rectangle
@@ -128,7 +130,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES):
 
         # Display all debugging windows
         cv2.imshow('Original', frame)
-        cv2.imshow('Edges', edges)
 
         if frame_count % 100 == 0:
             car_data.display_all_cars()
