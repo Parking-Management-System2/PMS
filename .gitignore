@@ -1,3 +1,7 @@
 .idea
 redis_db/__pycache__/
 data/*
+backend/db/__pycache__/
+backend/models/__pycache__/
+backend/routes/__pycache__/
+backend/db/parking_system.db
