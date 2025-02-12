@@ -1,15 +1,15 @@
 import uuid
 
 from .redis_client import RedisClient
-from .parking_slot_data import ParkingSlotData
-from .validation_result import ValidationResult
+
 
 class CarData(RedisClient):
     def __init__(self):
         super().__init__()
         self.car_last_seen = {}
 
-    def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y):
+    def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x,
+                     position_bottom_y):
         key = f"car:{registration_number}"
         self.hset(key, 'status', status)
         self.hset(key, 'position_upper_x', position_upper_x)
@@ -25,7 +25,8 @@ class CarData(RedisClient):
         key = f"car:{registration_number}"
         self.hset(key, "status", new_status)
 
-    def update_car_position(self, registration_number, position_upper_x, position_upper_y, position_bottom_x, position_bottom_y):
+    def update_car_position(self, registration_number, position_upper_x, position_upper_y, position_bottom_x,
+                            position_bottom_y):
         key = f"car:{registration_number}"
         self.hset(key, 'position_upper_x', position_upper_x)
         self.hset(key, 'position_upper_y', position_upper_y)
@@ -40,9 +41,6 @@ class CarData(RedisClient):
         keys = self.keys('car:*')
         for key in keys:
             print(f'{key} : {self.hgetall(key)}')
-        print("\n\n\n\n")
-        # car_count = len(self.keys('car:*'))
-        # print(f"Number of cars in Redis: {car_count}")
 
     def get_nearest_car(self, x, y, max_distance=50):
         """Finds the nearest stored car within max_distance."""
@@ -91,6 +89,7 @@ class CarData(RedisClient):
 
         # Remove undetected cars
         for registration_number in list(self.car_last_seen.keys()):
-            if registration_number not in detected_cars and frame_count - self.car_last_seen[registration_number] > max_undetected_frames:
+            if registration_number not in detected_cars and frame_count - self.car_last_seen[
+                registration_number] > max_undetected_frames:
                 self.remove_car(registration_number)
                 del self.car_last_seen[registration_number]
