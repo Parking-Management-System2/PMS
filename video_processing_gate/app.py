@@ -1,76 +1,124 @@
 import os
 import cv2
-from PIL import Image
-import pytesseract
+import easyocr
+import re
+import concurrent.futures
+import threading
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-image_frames = 'image_frames'
+VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'GATE4.mp4'))
 
-def display_video():
-    device = "test_video14.mp4"
+# Initialize EasyOCR (English) with GPU if available
+reader = easyocr.Reader(['en'], gpu=False)
 
-    cap = cv2.VideoCapture(device)
+# Registration pattern that meets the conditions
+registration_pattern = re.compile(r'^[A-Z]{2,3} [A-Z0-9]{4,5}$')
 
-    while not cap.isOpened():
-        cap = cv2.VideoCapture(device)
-        cv2.waitKey(2000)
-        print("Waiting for video")
 
-    while True:
-        flag, frame = cap.read()
-        if flag:
-            cv2.imshow("Frame", frame)
+class LicensePlateRecognizer:
+    def __init__(self):
+        self.recognized_plates = []
+        self.lock = threading.Lock()
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
+        self.futures = []
 
-        else:
-            cv2.destroyAllWindows()
-            break
+        # Move 100 pixels right and 150 pixels up
+        self.roi = {
+            'x': 0,  # New X: 500
+            'y': 100,  # New Y: 350
+            'width': 1280,
+            'height': 350
+        }
 
-        if cv2.waitKey(1) == 27:
-            cv2.destroyAllWindows()
-            break
+    def preprocess_frame(self, frame):
+        """Preprocess frame for better OCR results"""
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # Apply adaptive thresholding
+        return cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                     cv2.THRESH_BINARY, 11, 2)
 
-def files():
-    # Usuń wszystkie pliki w folderze image_frames, jeśli istnieje
-    if os.path.exists(image_frames):
-        for file in os.listdir(image_frames):
-            file_path = os.path.join(image_frames, file)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-    else:
-        os.makedirs(image_frames)
+    def process_frame_ocr(self, frame):
+        """Process frame for license plate recognition"""
+        try:
+            # Preprocess the frame
+            processed = self.preprocess_frame(frame)
 
-    src_vid = cv2.VideoCapture('../data/test_video14.mp4')
-    return src_vid
+            # Perform OCR
+            results = reader.readtext(processed, detail=0, paragraph=True)
+            text = " ".join(results).strip().upper()
 
-def process(src_vid):
-    index = 0
-    while src_vid.isOpened():
-        ret, frame = src_vid.read()
-        if not ret:
-            break
+            # Validate against registration pattern
+            if registration_pattern.match(text):
+                return text
+        except Exception as e:
+            print(f"OCR processing error: {str(e)}")
+        return None
 
-        name = './image_frames/frame' + str(index) + '.png'
+    def update_recognized_plates(self, text):
+        """Thread-safe update of recognized plates list"""
+        with self.lock:
+            if text and text not in self.recognized_plates:
+                self.recognized_plates.append(text)
+                print(f"New plate recognized: {text}")
 
-        if index % 100 == 0:
-            cv2.imwrite(name, frame)
-        index = index + 1
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
+    def process_video(self, video_path):
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print(f"Error: Could not open video file {video_path}")
+            return
 
-    src_vid.release()
-    cv2.destroyAllWindows()
+        frame_count = 0
+        frames=[750, 2800, 4000, 5375, 7375, 8925, 11600]
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-def get_text():
-    for i in os.listdir(image_frames):
-        my_example = Image.open(image_frames + "/" + i)
-        # W zmiennej tekst przechowywana jest tablica
-        text = pytesseract.image_to_string(my_example, lang='eng')
-        if i == os.listdir(image_frames)[-1]:
-            print(f'Rejestracja: {text}')
+            # Resize frame for display
+            frame = cv2.resize(frame, (1280, 720))
+            frame_count += 1
 
-# Main driver
-if __name__ == '__main__':
-    display_video()
-    vid = files()
-    process(vid)
-    get_text()
+            cv2.putText(frame, f"Frame: {frame_count}", (10, frame.shape[0] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 5)
+
+
+            # Process every 30th frame for performance balance
+            if frame_count in frames:
+                # Extract ROI for license plate
+                roi = frame[self.roi['y']:self.roi['y'] + self.roi['height'],
+                      self.roi['x']:self.roi['x'] + self.roi['width']]
+
+                # Submit OCR task to thread pool
+                future = self.executor.submit(self.process_frame_ocr, roi)
+                future.add_done_callback(
+                    lambda f: self.update_recognized_plates(f.result()))
+
+            # Draw ROI rectangle
+            cv2.rectangle(frame,
+                          (self.roi['x'], self.roi['y']),
+                          (self.roi['x'] + self.roi['width'], self.roi['y'] + self.roi['height']),
+                          (0, 255, 0), 2)
+
+            # Display recognized plates in top-right corner
+            with self.lock:
+                for i, plate in enumerate(self.recognized_plates):
+                    text_size = cv2.getTextSize(plate, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
+                    x = frame.shape[1] - text_size[0] - 20  # Right-aligned
+                    y = 40 + i * 40
+                    cv2.putText(frame, plate, (x, y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+            cv2.imshow('License Plate Recognition', frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+        # Cleanup
+        self.executor.shutdown(wait=False)
+        cap.release()
+        cv2.destroyAllWindows()
+        print(f"Final recognized plates: {self.recognized_plates}")
+
+
+if __name__ == "__main__":
+    recognizer = LicensePlateRecognizer()
+    recognizer.process_video(VIDEO_PATH)

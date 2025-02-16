@@ -115,7 +115,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         upper_left_y = int(height * 0.6 / 4)
         bottom_right_x = width
         bottom_right_y = int(height * 2 / 4)
-        cv2.rectangle(frame, (upper_left_x, upper_left_y), (bottom_right_x, bottom_right_y), (255, 0, 0), 2)  # Blue rectangle
 
         # Check if a car is located in the blue rectangle and if so update its status and position
         car_in_blue_rectangle = None
@@ -149,6 +148,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
                         registration_number = nearest_car.decode().split(':')[1]
                         car_data.update_car_status(registration_number, 'parked')
                     break
+
         # Draw two vertical lines for entry and exit gates with dynamic colors
         entry_gate_color = (0, 255, 0) if parking_gate_data.gate_status[0] == 'open' else (0, 0, 255)
         exit_gate_color = (0, 255, 0) if parking_gate_data.gate_status[1] == 'open' else (0, 0, 255)
