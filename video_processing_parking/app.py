@@ -7,6 +7,7 @@ import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from redis_db.car_data import CarData
+from redis_db.parking_gate_data import ParkingGateData
 
 # Constants for car detection parameters
 GAUSSIAN_BLUR_KERNEL_SIZE = (5, 5)
@@ -66,7 +67,7 @@ def detect_objects(frame):
 
     return cars, parking_slots, edges
 
-def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None):
+def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_gate_data=None):
     # Open the video file
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -76,6 +77,9 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None):
     if car_data is None:
         car_data = CarData()
 
+    if parking_gate_data is None:
+        parking_gate_data = ParkingGateData()    
+
     frame_count = 0
 
     while cap.isOpened():
@@ -83,6 +87,9 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None):
         if not ret:
             print("Error: Could not read frame")
             break
+
+        # Rotate the frame by 90 degrees
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
 
         frame_count += 1
 
@@ -127,6 +134,23 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None):
                 car_data.set_car_info(registration_number, 'moving', x, y, x + w, y + h)
             else:
                 print("Error: No most recent car found or registration_number key missing")
+
+
+        # Draw two vertical lines for entry and exit gates with dynamic colors
+        entry_gate_color = (0, 255, 0) if parking_gate_data.gate_status[0] == 'open' else (0, 0, 255)
+        exit_gate_color = (0, 255, 0) if parking_gate_data.gate_status[1] == 'open' else (0, 0, 255)
+
+        entry_gate_x = int(width * 2.6 / 4)
+        entry_gate_y_start = int(height * 0.7 / 4)
+        entry_gate_y_end = int(height * 1.7 / 4)
+
+
+        exit_gate_x = int(width * 2.6 / 4)
+        exit_gate_y_start = int(height * 2 / 4)
+        exit_gate_y_end = int(height * 3 / 4)
+
+        cv2.line(frame, (entry_gate_x, entry_gate_y_start), (entry_gate_x, entry_gate_y_end), entry_gate_color, 10)
+        cv2.line(frame, (exit_gate_x, exit_gate_y_start), (exit_gate_x, exit_gate_y_end), exit_gate_color, 10)
 
         # Display all debugging windows
         cv2.imshow('Original', frame)
