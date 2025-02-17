@@ -16,7 +16,7 @@ def run_parking_video_processing(car_data, parking_gate_data):
     process_parking_video(PARKING_VIDEO_PATH, PARKING_SKIP_FRAMES, car_data, parking_gate_data)
 
 def run_gate_video_processing(car_data, parking_gate_data):
-    recognizer = LicensePlateRecognizer(car_data, parking_gate_data, gate_open_duration=10)
+    recognizer = LicensePlateRecognizer(car_data, parking_gate_data, gate_open_duration=15)
     recognizer.process_video(GATE_VIDEO_PATH)
 
 if __name__ == "__main__":
