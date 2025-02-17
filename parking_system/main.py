@@ -17,7 +17,7 @@ def run_parking_video_processing(car_data, parking_gate_data):
     process_parking_video(PARKING_VIDEO_PATH, PARKING_SKIP_FRAMES, car_data, parking_gate_data)
 
 def run_gate_video_processing(car_data, parking_gate_data):
-    recognizer = LicensePlateRecognizer(car_data, parking_gate_data, gate_open_duration=15)
+    recognizer = LicensePlateRecognizer(car_data, parking_gate_data, gate_open_duration=20)
     recognizer.process_video(GATE_VIDEO_PATH)
 
 if __name__ == "__main__":
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     # Initialize gate statuses
     parking_gate_data.set_gate_status(0, 'closed')  # Entry gate closed
-    parking_gate_data.set_gate_status(1, 'open')  # Exit gate open
+    parking_gate_data.set_gate_status(1, 'closed')  # Exit gate open
 
     # Create threads for video processing
     video_parking_thread = threading.Thread(
