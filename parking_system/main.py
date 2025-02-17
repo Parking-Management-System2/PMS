@@ -15,8 +15,8 @@ from video_processing_gate.app import LicensePlateRecognizer, VIDEO_PATH as GATE
 def run_parking_video_processing(car_data, parking_gate_data):
     process_parking_video(PARKING_VIDEO_PATH, PARKING_SKIP_FRAMES, car_data, parking_gate_data)
 
-def run_gate_video_processing():
-    recognizer = LicensePlateRecognizer()
+def run_gate_video_processing(car_data, parking_gate_data):
+    recognizer = LicensePlateRecognizer(car_data, parking_gate_data, gate_open_duration=15)
     recognizer.process_video(GATE_VIDEO_PATH)
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # Create threads for video processing
     video_parking_thread = threading.Thread(target=run_parking_video_processing, args=(car_data, parking_gate_data))
-    video_gate_thread = threading.Thread(target=run_gate_video_processing)
+    video_gate_thread = threading.Thread(target=run_gate_video_processing, args=(car_data, parking_gate_data))
 
     # Start the threads
     video_parking_thread.start()

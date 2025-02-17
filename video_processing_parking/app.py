@@ -23,9 +23,8 @@ MAX_CAR_CONTOUR_AREA = 18000
 MIN_PARKING_SLOT_CONTOUR_AREA = 22000
 MAX_PARKING_SLOT_CONTOUR_AREA = 38000
 
-SKIP_FRAMES = 3
+SKIP_FRAMES = 8
 VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
-MAX_UNDETECTED_FRAMES = 250  # Maximum number of frames a car can be undetected before being removed
 
 def preprocess_image(frame):
     # Convert to grayscale
@@ -78,7 +77,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         car_data = CarData()
 
     if parking_gate_data is None:
-        parking_gate_data = ParkingGateData()    
+        parking_gate_data = ParkingGateData()
 
     frame_count = 0
 
@@ -99,11 +98,9 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
 
         # Detect cars and parking slots in the frame and get debug images
         cars, parking_slots, edges = detect_objects(frame)
-        car_data.update_cars(cars, frame_count, MAX_UNDETECTED_FRAMES)
+        car_data.update_cars(cars, frame_count)
 
-        # Draw rectangles around detected cars
-        for (x, y, w, h) in cars:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red rectangle for cars
+
 
         # Draw rectangles around detected parking slots
         for (x, y, w, h) in parking_slots:
@@ -127,14 +124,15 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         if car_in_blue_rectangle:
             most_recent_car = car_data.get_most_recent_car()
             print(f"Most recent car: {most_recent_car}")  # Debug print
+
             if most_recent_car and b'registration_number' in most_recent_car:
                 registration_number = most_recent_car[b'registration_number'].decode()
                 x, y, w, h = car_in_blue_rectangle
-                car_data.set_car_info(registration_number, 'moving', x, y, x + w, y + h)
+                car_data.update_car_position(registration_number, x, y, x + w, y + h)
+                car_data.update_car_status(registration_number, 'detected')
             else:
                 print("Error: No most recent car found or registration_number key missing")
 
-        # Update car status if inside a parking slot
         for (car_x, car_y, car_w, car_h) in cars:
             car_area = car_w * car_h
             for (slot_x, slot_y, slot_w, slot_h) in parking_slots:
@@ -146,8 +144,28 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
                     nearest_car = car_data.get_nearest_car(car_x + car_w // 2, car_y + car_h // 2)
                     if nearest_car:
                         registration_number = nearest_car.decode().split(':')[1]
+                        car_data.update_car_position(registration_number, car_x, car_y, car_x + car_w, car_y + car_h)
                         car_data.update_car_status(registration_number, 'parked')
                     break
+
+        # Draw rectangles around detected cars with dynamic colors based on status
+        for (x, y, w, h) in cars:
+            nearest_car = car_data.get_nearest_car(x + w // 2, y + h // 2)
+            if nearest_car:
+                registration_number = nearest_car.decode().split(':')[1]
+                car_info = car_data.get_car_info(registration_number)
+                status = car_info.get(b'status', b'detected').decode()
+
+                if status == 'detected':
+                    color = (255, 0, 0)  # Blue
+                elif status == 'moving':
+                    color = (0, 255, 255)  # Yellow
+                elif status == 'parked':
+                    color = (0, 255, 0)  # Green
+                else:
+                    color = (0, 0, 255)  # Default to red if status is unknown
+
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
 
         # Draw two vertical lines for entry and exit gates with dynamic colors
         entry_gate_color = (0, 255, 0) if parking_gate_data.gate_status[0] == 'open' else (0, 0, 255)
@@ -156,7 +174,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         entry_gate_x = int(width * 2.6 / 4)
         entry_gate_y_start = int(height * 0.7 / 4)
         entry_gate_y_end = int(height * 1.7 / 4)
-
 
         exit_gate_x = int(width * 2.6 / 4)
         exit_gate_y_start = int(height * 2 / 4)
@@ -168,8 +185,8 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         # Display all debugging windows
         cv2.imshow('Original', frame)
 
-        if frame_count % 100 == 0:
-            car_data.display_all_cars()
+        # if frame_count % frame_count * 10 == 0:
+        car_data.display_all_cars()
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):

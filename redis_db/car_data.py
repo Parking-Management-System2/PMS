@@ -9,7 +9,8 @@ class CarData(RedisClient):
     def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x,
                      position_bottom_y):
         key = f"car:{registration_number}"
-        self.hset(key, 'status', status)
+        self.hset(key, 'registration_number', registration_number)
+        self.hset(key, 'status', status) # detected, moving, parked
         self.hset(key, 'position_upper_x', position_upper_x)
         self.hset(key, 'position_upper_y', position_upper_y)
         self.hset(key, 'position_bottom_x', position_bottom_x)
@@ -69,10 +70,11 @@ class CarData(RedisClient):
         most_recent_key = self.client.lindex('car_keys', -1)
         if most_recent_key:
             registration_number = most_recent_key.decode().split(':')[1]
-            return self.get_car_info(registration_number)
+            car_info = self.get_car_info(registration_number)
+            return car_info
         return None
 
-    def get_nearest_car(self, x, y, max_distance=50):
+    def get_nearest_car(self, x, y, max_distance=150):
         """Finds the nearest stored car within max_distance."""
         keys = self.keys('car:*')
         closest_car = None
@@ -96,30 +98,24 @@ class CarData(RedisClient):
 
         return closest_car
 
-    def update_cars(self, cars, frame_count, max_undetected_frames):
+    def update_cars(self, cars, frame_count):
         detected_cars = set()
 
         for (x, y, w, h) in cars:
             existing_car_key = self.get_nearest_car(x, y)
 
             if existing_car_key:
-                # Update existing car's position
-                self.hset(existing_car_key, 'position_upper_x', x)
-                self.hset(existing_car_key, 'position_upper_y', y)
-                self.hset(existing_car_key, 'position_bottom_x', x + w)
-                self.hset(existing_car_key, 'position_bottom_y', y + h)
-                registration_number = existing_car_key.decode().split(':')[1]
-            else:
-                # Generate a unique registration number
-                registration_number = str(uuid.uuid4())
-                self.set_car_info(registration_number, 'detected', x, y, x + w, y + h)
+                # Check if the car is not parked
+                car_info = self.hgetall(existing_car_key)
+                if car_info.get(b'status', b'').decode() != 'parked':
+                    # Update existing car's position
+                    self.hset(existing_car_key, 'position_upper_x', x)
+                    self.hset(existing_car_key, 'position_upper_y', y)
+                    self.hset(existing_car_key, 'position_bottom_x', x + w)
+                    self.hset(existing_car_key, 'position_bottom_y', y + h)
 
-            self.car_last_seen[registration_number] = frame_count
-            detected_cars.add(registration_number)
+                    registration_number = existing_car_key.decode().split(':')[1]
+                    self.update_car_status(registration_number, 'moving')
 
-        # Remove undetected cars
-        for registration_number in list(self.car_last_seen.keys()):
-            if registration_number not in detected_cars and frame_count - self.car_last_seen[
-                registration_number] > max_undetected_frames:
-                self.remove_car(registration_number)
-                del self.car_last_seen[registration_number]
+                    self.car_last_seen[registration_number] = frame_count
+                    detected_cars.add(registration_number)
