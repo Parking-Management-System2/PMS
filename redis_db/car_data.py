@@ -9,6 +9,7 @@ class CarData(RedisClient):
     def set_car_info(self, registration_number, status, position_upper_x, position_upper_y, position_bottom_x,
                      position_bottom_y):
         key = f"car:{registration_number}"
+        self.hset(key, 'registration_number', registration_number)
         self.hset(key, 'status', status)
         self.hset(key, 'position_upper_x', position_upper_x)
         self.hset(key, 'position_upper_y', position_upper_y)
@@ -69,7 +70,8 @@ class CarData(RedisClient):
         most_recent_key = self.client.lindex('car_keys', -1)
         if most_recent_key:
             registration_number = most_recent_key.decode().split(':')[1]
-            return self.get_car_info(registration_number)
+            car_info = self.get_car_info(registration_number)
+            return car_info
         return None
 
     def get_nearest_car(self, x, y, max_distance=50):
@@ -109,13 +111,9 @@ class CarData(RedisClient):
                 self.hset(existing_car_key, 'position_bottom_x', x + w)
                 self.hset(existing_car_key, 'position_bottom_y', y + h)
                 registration_number = existing_car_key.decode().split(':')[1]
-            else:
-                # Generate a unique registration number
-                registration_number = str(uuid.uuid4())
-                self.set_car_info(registration_number, 'detected', x, y, x + w, y + h)
 
-            self.car_last_seen[registration_number] = frame_count
-            detected_cars.add(registration_number)
+                self.car_last_seen[registration_number] = frame_count
+                detected_cars.add(registration_number)
 
         # Remove undetected cars
         for registration_number in list(self.car_last_seen.keys()):

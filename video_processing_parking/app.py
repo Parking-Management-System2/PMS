@@ -23,7 +23,7 @@ MAX_CAR_CONTOUR_AREA = 18000
 MIN_PARKING_SLOT_CONTOUR_AREA = 22000
 MAX_PARKING_SLOT_CONTOUR_AREA = 38000
 
-SKIP_FRAMES = 5
+SKIP_FRAMES = 6
 VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
 MAX_UNDETECTED_FRAMES = 250  # Maximum number of frames a car can be undetected before being removed
 
@@ -78,7 +78,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         car_data = CarData()
 
     if parking_gate_data is None:
-        parking_gate_data = ParkingGateData()    
+        parking_gate_data = ParkingGateData()
 
     frame_count = 0
 
@@ -127,10 +127,12 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         if car_in_blue_rectangle:
             most_recent_car = car_data.get_most_recent_car()
             print(f"Most recent car: {most_recent_car}")  # Debug print
+
             if most_recent_car and b'registration_number' in most_recent_car:
                 registration_number = most_recent_car[b'registration_number'].decode()
                 x, y, w, h = car_in_blue_rectangle
-                car_data.set_car_info(registration_number, 'moving', x, y, x + w, y + h)
+                car_data.update_car_position(registration_number, x, y, x + w, y + h)
+                car_data.update_car_status(registration_number, 'moving')
             else:
                 print("Error: No most recent car found or registration_number key missing")
 
