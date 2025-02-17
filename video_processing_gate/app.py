@@ -4,6 +4,7 @@ import easyocr
 import re
 import concurrent.futures
 import threading
+import time
 
 VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'GATE4.mp4'))
 
@@ -107,10 +108,14 @@ class LicensePlateRecognizer:
                     cv2.putText(frame, plate, (x, y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
+
             cv2.imshow('License Plate Recognition', frame)
+
+            time.sleep(0.005)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
 
         # Cleanup
         self.executor.shutdown(wait=False)

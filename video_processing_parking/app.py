@@ -23,7 +23,7 @@ MAX_CAR_CONTOUR_AREA = 18000
 MIN_PARKING_SLOT_CONTOUR_AREA = 22000
 MAX_PARKING_SLOT_CONTOUR_AREA = 38000
 
-SKIP_FRAMES = 3
+SKIP_FRAMES = 5
 VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
 MAX_UNDETECTED_FRAMES = 250  # Maximum number of frames a car can be undetected before being removed
 
