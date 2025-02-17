@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from redis_db.car_data import CarData
 from redis_db.parking_gate_data import ParkingGateData
+from data_display.live_display import start_live_display  # New import
 
 from video_processing_parking.app import process_video as process_parking_video, VIDEO_PATH as PARKING_VIDEO_PATH, \
     SKIP_FRAMES as PARKING_SKIP_FRAMES
@@ -30,13 +31,23 @@ if __name__ == "__main__":
     parking_gate_data.set_gate_status(1, 'open')  # Exit gate open
 
     # Create threads for video processing
-    video_parking_thread = threading.Thread(target=run_parking_video_processing, args=(car_data, parking_gate_data))
-    video_gate_thread = threading.Thread(target=run_gate_video_processing, args=(car_data, parking_gate_data))
+    video_parking_thread = threading.Thread(
+        target=run_parking_video_processing,
+        args=(car_data, parking_gate_data),
+        daemon=True
+    )
+    video_gate_thread = threading.Thread(
+        target=run_gate_video_processing,
+        args=(car_data, parking_gate_data),
+        daemon=True
+    )
 
     # Start the threads
     video_parking_thread.start()
     video_gate_thread.start()
 
-    # Wait for both threads to complete
-    video_parking_thread.join()
-    video_gate_thread.join()
+    # Start the live display GUI in the main thread
+    start_live_display(car_data, parking_gate_data)
+
+    # No need to join threads since they're daemon threads
+    # The program will exit when the GUI window is closed
