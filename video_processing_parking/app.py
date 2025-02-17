@@ -115,7 +115,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         upper_left_y = int(height * 0.6 / 4)
         bottom_right_x = width
         bottom_right_y = int(height * 2 / 4)
-        cv2.rectangle(frame, (upper_left_x, upper_left_y), (bottom_right_x, bottom_right_y), (255, 0, 0), 2)  # Blue rectangle
 
         # Check if a car is located in the blue rectangle and if so update its status and position
         car_in_blue_rectangle = None
@@ -135,6 +134,20 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
             else:
                 print("Error: No most recent car found or registration_number key missing")
 
+        # Update car status if inside a parking slot
+        for (car_x, car_y, car_w, car_h) in cars:
+            car_area = car_w * car_h
+            for (slot_x, slot_y, slot_w, slot_h) in parking_slots:
+                overlap_x = max(0, min(car_x + car_w, slot_x + slot_w) - max(car_x, slot_x))
+                overlap_y = max(0, min(car_y + car_h, slot_y + slot_h) - max(car_y, slot_y))
+                overlap_area = overlap_x * overlap_y
+
+                if overlap_area >= 0.8 * car_area:
+                    nearest_car = car_data.get_nearest_car(car_x + car_w // 2, car_y + car_h // 2)
+                    if nearest_car:
+                        registration_number = nearest_car.decode().split(':')[1]
+                        car_data.update_car_status(registration_number, 'parked')
+                    break
 
         # Draw two vertical lines for entry and exit gates with dynamic colors
         entry_gate_color = (0, 255, 0) if parking_gate_data.gate_status[0] == 'open' else (0, 0, 255)
