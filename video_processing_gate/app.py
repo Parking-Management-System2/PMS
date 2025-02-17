@@ -93,6 +93,9 @@ class LicensePlateRecognizer:
             frame = cv2.resize(frame, (1280, 720))
             frame_count += 1
 
+            if frame_count == 6400:
+                time.sleep(7)
+
             cv2.putText(frame, f"Frame: {frame_count}", (10, frame.shape[0] - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 5)
 
@@ -124,7 +127,7 @@ class LicensePlateRecognizer:
 
             cv2.imshow('License Plate Recognition', frame)
 
-            time.sleep(0.006)
+            time.sleep(0.005)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
