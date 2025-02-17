@@ -10,7 +10,7 @@ class CarData(RedisClient):
                      position_bottom_y):
         key = f"car:{registration_number}"
         self.hset(key, 'registration_number', registration_number)
-        self.hset(key, 'status', status)
+        self.hset(key, 'status', status) # detected, moving, parked
         self.hset(key, 'position_upper_x', position_upper_x)
         self.hset(key, 'position_upper_y', position_upper_y)
         self.hset(key, 'position_bottom_x', position_bottom_x)
@@ -105,12 +105,17 @@ class CarData(RedisClient):
             existing_car_key = self.get_nearest_car(x, y)
 
             if existing_car_key:
-                # Update existing car's position
-                self.hset(existing_car_key, 'position_upper_x', x)
-                self.hset(existing_car_key, 'position_upper_y', y)
-                self.hset(existing_car_key, 'position_bottom_x', x + w)
-                self.hset(existing_car_key, 'position_bottom_y', y + h)
-                registration_number = existing_car_key.decode().split(':')[1]
+                # Check if the car is not parked
+                car_info = self.hgetall(existing_car_key)
+                if car_info.get(b'status', b'').decode() != 'parked':
+                    # Update existing car's position
+                    self.hset(existing_car_key, 'position_upper_x', x)
+                    self.hset(existing_car_key, 'position_upper_y', y)
+                    self.hset(existing_car_key, 'position_bottom_x', x + w)
+                    self.hset(existing_car_key, 'position_bottom_y', y + h)
 
-                self.car_last_seen[registration_number] = frame_count
-                detected_cars.add(registration_number)
+                    registration_number = existing_car_key.decode().split(':')[1]
+                    self.update_car_status(registration_number, 'moving')
+
+                    self.car_last_seen[registration_number] = frame_count
+                    detected_cars.add(registration_number)

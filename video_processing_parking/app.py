@@ -100,9 +100,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         cars, parking_slots, edges = detect_objects(frame)
         car_data.update_cars(cars, frame_count)
 
-        # Draw rectangles around detected cars
-        for (x, y, w, h) in cars:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red rectangle for cars
+
 
         # Draw rectangles around detected parking slots
         for (x, y, w, h) in parking_slots:
@@ -131,7 +129,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
                 registration_number = most_recent_car[b'registration_number'].decode()
                 x, y, w, h = car_in_blue_rectangle
                 car_data.update_car_position(registration_number, x, y, x + w, y + h)
-                car_data.update_car_status(registration_number, 'moving')
+                car_data.update_car_status(registration_number, 'detected')
             else:
                 print("Error: No most recent car found or registration_number key missing")
 
@@ -150,6 +148,25 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
                         car_data.update_car_status(registration_number, 'parked')
                     break
 
+        # Draw rectangles around detected cars with dynamic colors based on status
+        for (x, y, w, h) in cars:
+            nearest_car = car_data.get_nearest_car(x + w // 2, y + h // 2)
+            if nearest_car:
+                registration_number = nearest_car.decode().split(':')[1]
+                car_info = car_data.get_car_info(registration_number)
+                status = car_info.get(b'status', b'detected').decode()
+
+                if status == 'detected':
+                    color = (255, 0, 0)  # Blue
+                elif status == 'moving':
+                    color = (0, 255, 255)  # Yellow
+                elif status == 'parked':
+                    color = (0, 255, 0)  # Green
+                else:
+                    color = (0, 0, 255)  # Default to red if status is unknown
+
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+
         # Draw two vertical lines for entry and exit gates with dynamic colors
         entry_gate_color = (0, 255, 0) if parking_gate_data.gate_status[0] == 'open' else (0, 0, 255)
         exit_gate_color = (0, 255, 0) if parking_gate_data.gate_status[1] == 'open' else (0, 0, 255)
@@ -157,7 +174,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         entry_gate_x = int(width * 2.6 / 4)
         entry_gate_y_start = int(height * 0.7 / 4)
         entry_gate_y_end = int(height * 1.7 / 4)
-
 
         exit_gate_x = int(width * 2.6 / 4)
         exit_gate_y_start = int(height * 2 / 4)
