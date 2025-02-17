@@ -74,7 +74,7 @@ class CarData(RedisClient):
             return car_info
         return None
 
-    def get_nearest_car(self, x, y, max_distance=50):
+    def get_nearest_car(self, x, y, max_distance=150):
         """Finds the nearest stored car within max_distance."""
         keys = self.keys('car:*')
         closest_car = None
@@ -98,7 +98,7 @@ class CarData(RedisClient):
 
         return closest_car
 
-    def update_cars(self, cars, frame_count, max_undetected_frames):
+    def update_cars(self, cars, frame_count):
         detected_cars = set()
 
         for (x, y, w, h) in cars:
@@ -114,10 +114,3 @@ class CarData(RedisClient):
 
                 self.car_last_seen[registration_number] = frame_count
                 detected_cars.add(registration_number)
-
-        # Remove undetected cars
-        for registration_number in list(self.car_last_seen.keys()):
-            if registration_number not in detected_cars and frame_count - self.car_last_seen[
-                registration_number] > max_undetected_frames:
-                self.remove_car(registration_number)
-                del self.car_last_seen[registration_number]

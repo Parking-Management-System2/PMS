@@ -25,7 +25,6 @@ MAX_PARKING_SLOT_CONTOUR_AREA = 38000
 
 SKIP_FRAMES = 6
 VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
-MAX_UNDETECTED_FRAMES = 250  # Maximum number of frames a car can be undetected before being removed
 
 def preprocess_image(frame):
     # Convert to grayscale
@@ -99,7 +98,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
 
         # Detect cars and parking slots in the frame and get debug images
         cars, parking_slots, edges = detect_objects(frame)
-        car_data.update_cars(cars, frame_count, MAX_UNDETECTED_FRAMES)
+        car_data.update_cars(cars, frame_count)
 
         # Draw rectangles around detected cars
         for (x, y, w, h) in cars:
@@ -136,7 +135,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
             else:
                 print("Error: No most recent car found or registration_number key missing")
 
-        # Update car status if inside a parking slot
         for (car_x, car_y, car_w, car_h) in cars:
             car_area = car_w * car_h
             for (slot_x, slot_y, slot_w, slot_h) in parking_slots:
@@ -148,6 +146,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
                     nearest_car = car_data.get_nearest_car(car_x + car_w // 2, car_y + car_h // 2)
                     if nearest_car:
                         registration_number = nearest_car.decode().split(':')[1]
+                        car_data.update_car_position(registration_number, car_x, car_y, car_x + car_w, car_y + car_h)
                         car_data.update_car_status(registration_number, 'parked')
                     break
 
@@ -170,8 +169,8 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
         # Display all debugging windows
         cv2.imshow('Original', frame)
 
-        if frame_count % 100 == 0:
-            car_data.display_all_cars()
+        # if frame_count % frame_count * 10 == 0:
+        car_data.display_all_cars()
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
