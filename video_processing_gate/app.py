@@ -93,12 +93,6 @@ class LicensePlateRecognizer:
             frame = cv2.resize(frame, (1280, 720))
             frame_count += 1
 
-            if frame_count == 6400:
-                time.sleep(7)
-
-            cv2.putText(frame, f"Frame: {frame_count}", (10, frame.shape[0] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 5)
-
             # Process specific frames for performance balance
             if frame_count in frames:
                 # Extract ROI for license plate
@@ -136,7 +130,6 @@ class LicensePlateRecognizer:
         self.executor.shutdown(wait=False)
         cap.release()
         cv2.destroyAllWindows()
-        print(f"Final recognized plates: {self.recognized_plates}")
 
 if __name__ == "__main__":
     car_data = CarData()
