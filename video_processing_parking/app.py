@@ -23,8 +23,8 @@ MAX_CAR_CONTOUR_AREA = 18000
 MIN_PARKING_SLOT_CONTOUR_AREA = 22000
 MAX_PARKING_SLOT_CONTOUR_AREA = 38000
 
-SKIP_FRAMES = 7
-VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.MOV'))
+SKIP_FRAMES = 3
+VIDEO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '2', 'PARKING.mp4'))
 
 def preprocess_image(frame):
     # Convert to grayscale
@@ -88,7 +88,7 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
             break
 
         # Rotate the frame by 90 degrees
-        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
 
         frame_count += 1
 
@@ -179,9 +179,6 @@ def process_video(video_path, skip_frames=SKIP_FRAMES, car_data=None, parking_ga
 
         # Display all debugging windows
         cv2.imshow('Original', frame)
-
-        # if frame_count % frame_count * 10 == 0:
-        car_data.display_all_cars()
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):

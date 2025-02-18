@@ -31,7 +31,6 @@ class LiveDisplayApp:
         self.car_tree.delete(*self.car_tree.get_children())
         cars = self.car_data.get_all_cars()
         for car in cars:
-            print(car)
             position = f"({car.get(b'position_upper_x', 'N/A').decode()}, {car.get(b'position_upper_y', 'N/A').decode()})"
             self.car_tree.insert("", "end", values=(car['registration_number'], car.get(b'status', 'N/A'), position))
 
